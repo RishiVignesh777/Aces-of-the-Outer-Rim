@@ -1,0 +1,6 @@
+{
+  "name": "Aces of the Outer Rim",
+  "description": "Cinematic offline single-player space combat simulator featuring tactical energy management, deep hangar customization, multi-stage capital ship battles, diegetic cockpit immersion, and drift-heavy hybrid space physics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

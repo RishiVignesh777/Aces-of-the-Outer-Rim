@@ -4,6 +4,11 @@
  */
 
 import * as THREE from 'three';
+import {
+  calculateStructuralVibration,
+  calculateTraumaAmplification,
+  getDamageSeverityStage,
+} from './damageEffects.ts';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {
   createPlayerFighterMesh,
@@ -921,9 +926,16 @@ export class SpaceCombatSimulation {
         if (this.powerState.shieldLevel > 0) {
           this.powerState.shieldLevel = Math.max(0, this.powerState.shieldLevel - p.damage);
           sound.playShieldHit();
+          this.addTrauma(0.35);
         } else {
           this.playerHull = Math.max(0, this.playerHull - p.damage);
+          const traumaAmp = calculateTraumaAmplification(this.playerHull, this.playerMaxHull);
+          this.addTrauma(0.45 * traumaAmp);
           sound.playExplosion(false);
+          sound.playHullGroan((this.playerMaxHull - this.playerHull) / this.playerMaxHull);
+          if (this.playerHull < 40 && Math.random() < 0.6) {
+            sound.playElectricalSparks();
+          }
 
           if (this.playerHull <= 0) {
             this.callbacks.onGameOver({
@@ -1015,12 +1027,36 @@ export class SpaceCombatSimulation {
       this.camera.lookAt(this.playerGroup.position.clone().add(new THREE.Vector3(0, 0, -20).applyQuaternion(this.playerGroup.quaternion)));
     }
 
-    // Screen Shake / Trauma
+    // Screen Shake / Trauma & Dynamic Structural Vibration
+    const nowSec = performance.now() / 1000;
+    const traumaAmp = calculateTraumaAmplification(this.playerHull, this.playerMaxHull);
+    const structuralVibe = calculateStructuralVibration(
+      this.playerHull,
+      this.playerMaxHull,
+      nowSec,
+      this.viewMode === "COCKPIT"
+    );
+
     if (this.trauma > 0) {
-      const shake = this.trauma * this.trauma * 0.4;
+      const shake = Math.pow(this.trauma, 2) * 0.45 * traumaAmp;
       this.camera.position.x += (Math.random() - 0.5) * shake;
       this.camera.position.y += (Math.random() - 0.5) * shake;
+      this.camera.position.z += (Math.random() - 0.5) * shake * 0.35;
+      this.camera.rotation.z += (Math.random() - 0.5) * shake * 0.08;
       this.trauma = Math.max(0, this.trauma - 1.2 * dt);
+    }
+
+    // Continuous baseline structural tremor when damaged
+    if (structuralVibe.intensity > 0) {
+      this.camera.position.x += structuralVibe.offsetX;
+      this.camera.position.y += structuralVibe.offsetY;
+      this.camera.position.z += structuralVibe.offsetZ;
+      this.camera.rotation.z += structuralVibe.rollAngle;
+
+      if (this.viewMode === "COCKPIT" && this.cockpitInterior) {
+        this.cockpitInterior.cockpitGroup.position.x = structuralVibe.offsetX * 0.4;
+        this.cockpitInterior.cockpitGroup.position.y = structuralVibe.offsetY * 0.4;
+      }
     }
   }
 
@@ -1093,6 +1129,17 @@ export class SpaceCombatSimulation {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+  }
+
+  public applyDamage(amount: number) {
+    if (this.powerState.shieldLevel > 0) {
+      this.powerState.shieldLevel = Math.max(0, this.powerState.shieldLevel - amount * 0.6);
+    }
+    this.playerHull = Math.max(5, this.playerHull - amount);
+    const traumaAmp = calculateTraumaAmplification(this.playerHull, this.playerMaxHull);
+    this.addTrauma(0.55 * traumaAmp);
+    sound.playHullGroan((this.playerMaxHull - this.playerHull) / this.playerMaxHull);
+    sound.playElectricalSparks();
   }
 
   public setPaused(paused: boolean) {

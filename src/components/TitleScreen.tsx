@@ -105,7 +105,7 @@ export const TitleScreen: React.FC<TitleScreenProps> = ({ onStart, onOpenHangar 
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-mono text-slate-400 bg-slate-950/90 border-t border-slate-800 p-3">
         <div className="flex items-center space-x-2">
           <span className="text-cyan-400 font-bold">FLIGHT CONTROLS:</span>
-          <span>W/S Throttle · A/D Strafe · Mouse Pitch/Yaw · Shift Boost · Z Decoupled Drift · 1-4 Power · F1-F3 Squad · Space Fire</span>
+          <span>W/S Throttle · A/D Strafe · Mouse Pitch/Yaw · Shift Boost · Z Decoupled Drift · 1-4 Power · F1-F3 Squad · Space Fire · K Damage Test</span>
         </div>
         <div className="mt-2 sm:mt-0 text-slate-500">
           OFFLINE COMBAT READY · v1.4

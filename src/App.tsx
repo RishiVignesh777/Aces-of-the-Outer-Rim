@@ -166,6 +166,12 @@ export default function App() {
       if (e.code === 'Digit3') simRef.current.setPowerPreset('SHIELDS');
       if (e.code === 'Digit4') simRef.current.setPowerPreset('BALANCED');
 
+      // Test Structural Damage Key [K]
+      if (e.code === 'KeyK') {
+        e.preventDefault();
+        simRef.current.applyDamage(25);
+      }
+
       // Emergency Cores
       if (e.code === 'KeyC') simRef.current.triggerPowerDump();
       if (e.code === 'KeyX') simRef.current.triggerOvercharge();
